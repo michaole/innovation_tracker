@@ -1,5 +1,5 @@
 ---
-stepsCompleted: [step-01-init, step-01b-continue, step-02-discovery, step-02b-vision, step-02c-executive-summary, step-03-success, step-04-journeys]
+stepsCompleted: [step-01-init, step-01b-continue, step-02-discovery, step-02b-vision, step-02c-executive-summary, step-03-success, step-04-journeys, step-06-innovation, step-07-project-type, step-08-scoping, step-09-functional, step-10-nonfunctional, step-11-polish, step-12-complete]
 inputDocuments:
   - product-brief-dev-2026-02-20.md
   - research/domain-poc-to-product-funnel-research-2026-02-27.md
@@ -53,7 +53,7 @@ The core insight is behavioral, not technical: the organization already has two 
 - Amber/Red PoCs surface automatically — exception handling replaces routine chasing
 
 **Innovation Lead & Leadership (Michal / Lead Team):**
-- Any leadership status question is answerable within 60 seconds from the dashboard without involving Mark or Michal
+- Any leadership status question is answerable within 60 seconds from ADO without involving Mark or Michal
 - Monthly steering committee requires <30 minutes of preparation versus current manual effort
 
 ### Business Success
@@ -98,7 +98,7 @@ The core insight is behavioral, not technical: the organization already has two 
 - Prompt includes current stage criteria — owner knows exactly what's expected
 - Structured response: RAG (G/A/R) + one-sentence update + blockers (if A/R)
 - Auto-write back to ADO — no manual entry by SPOC or Mark
-- Non-response escalation: flag to Mark after 48 hours without reply
+- Non-response escalation: flag to Mark after 48 hours without reply; follow-up prompt sent to SPOC
 - Coverage: all PoC owners on company Teams (internal and vendor)
 
 **Onboarding & Documentation:**
@@ -212,3 +212,141 @@ He spends 20 minutes on targeted, high-value technical intervention instead of a
 | Michal / Leadership | ADO filtering by technology area + phase, mobile access, always-current data |
 | Christian — SA triage | Multi-field ADO filtering, blocker visibility, direct ADO access |
 
+## Platform & Integration Architecture
+
+### Deployment Model
+
+Single-instance deployment within the organization's Microsoft tenant. Multi-org expansion is configuration-only — no new infrastructure per org:
+- Same bot instance and ADO organization serve all organizational units
+- Each additional org unit operates within its own ADO project (or area path)
+- Onboarding a new org = configure ADO structure + add SPOCs to bot roster + set cadence
+
+### Role Permissions
+
+| Role | ADO Access | Bot Interaction | Notifications | Config |
+|---|---|---|---|---|
+| Innovation PO (Mark) | Full (create, edit, override) | Receives escalation messages | Non-response alerts, stall flags | Coordinates with vendor on bot config |
+| Innovation Lead (Michal) | Read (all PoCs, all filters) | None | None | None |
+| PoC Owner (Piotr, Karol…) | None required (bot writes on their behalf) | Receive prompts, submit replies | Bot acknowledgement | None |
+| Solution Architect (Christian) | Read (filter by tech area + RAG, add comments) | None | None | None |
+| Leadership | Read (technology area + phase filters) | None | None | None |
+| Vendor | Bot system access | Bot config and SPOC roster management | None | Full bot maintenance |
+
+### Integration Dependencies
+
+**MVP (Phase 1):**
+- **ADO REST API** — primary source of truth; bot reads PoC metadata (SPOC, phase, last-updated) and writes structured responses (RAG, summary, blockers, timestamp)
+- **Teams Bot Framework** — scheduled outbound prompts to PoC SPOCs; inbound response handling; PO escalation notifications
+
+**Phase 2:**
+- **Power Automate** — integration glue connecting ADO status changes to Teams channel notifications and Confluence display
+- **Power BI** — funnel visualization dashboard, RAG heatmap, stage drill-down, time-in-stage alerts
+
+## Delivery Strategy & Risk
+
+### MVP Approach
+
+**Philosophy:** Problem-solving MVP — prove that a pull-based trigger mechanism changes update behavior and delivers immediate, measurable relief from manual status chasing. The goal is behavioral proof: does the bot prompt cause PoC owners to update, and does ADO become the live source of truth?
+
+**Resource Model:** Mark (Innovation PO) coordinates an external vendor for bot development and maintenance. No internal engineering resource required. Mark owns ADO configuration and vendor relationship management.
+
+### Risk Mitigation
+
+**Technical Risk — Platform Policy Approval (HIGHEST PRIORITY):**
+- Risk: IT/Security approval for Teams bot registration and ADO REST API service account access may take weeks to months
+- Mitigation: Initiate approval requests on Day 1, in parallel with ADO structure setup and bot development. ADO template and field schema work proceeds immediately without approvals; bot development runs against a sandbox environment pending production access.
+- Fallback: Launch ADO-only first — the structured ADO template delivers immediate visibility improvement over Confluence regardless of bot status.
+
+**Adoption Risk — PoC Owner Response Rate:**
+- Risk: PoC owners ignore bot prompts at the same rate they ignore current manual requests
+- Mitigation: Phase-aware, ultra-low-friction prompt design (30–60 second reply). 48-hour non-response escalation to Mark creates accountability. Mark's manual override ensures ADO never shows stale data regardless of owner behavior.
+- Fallback: If response rates remain low after 4 weeks, Mark escalates specific non-responders to their team lead using the ADO timestamp as objective evidence.
+
+**Resource Risk — Vendor Delivery:**
+- Risk: Vendor delays or bot quality issues extend timeline
+- Mitigation: ADO structure work is Mark-owned and starts immediately. Bot is the sole vendor dependency — scoped as a discrete, testable deliverable with clear acceptance criteria (response parsing accuracy, ADO write-back verification, escalation trigger testing).
+- Fallback: ADO-only configuration delivers partial value independently of bot delivery.
+
+## Functional Requirements
+
+### PoC Data Management
+
+- **FR1:** Innovation PO can create a PoC record using a standardized template with required fields (PoC Name, SPOC, Technology Area, Funnel Stage, RAG Status, Last Update, Blockers)
+- **FR2:** Innovation PO can update any field on a PoC record at any time
+- **FR3:** The system records a last-updated timestamp on every PoC record whenever it is modified
+- **FR4:** The system maintains three funnel stages for PoC records: PoC, Product Fit, Scale
+- **FR5:** Each funnel stage contains 3–5 stage-specific completion criteria visible within the PoC record
+- **FR6:** Innovation PO can migrate existing PoC data from external sources into the ADO structure
+- **FR7:** Innovation PO and Solution Architects can add comments to a PoC record
+
+### Automated Status Collection
+
+- **FR8:** The system sends scheduled status prompt messages to each PoC SPOC via Teams at a configurable cadence
+- **FR9:** Each bot prompt includes the PoC's current funnel stage and its stage-specific criteria
+- **FR10:** PoC SPOCs can submit a status update by replying directly to the bot prompt in Teams without accessing ADO
+- **FR11:** The system parses a SPOC's free-text reply to extract RAG status, status summary, and blockers
+- **FR12:** The system automatically writes parsed response data (RAG, summary, blockers, timestamp) to the corresponding ADO PoC record
+- **FR13:** The system sends an acknowledgement message to the SPOC confirming their response was received and recorded
+
+### Non-Response Detection & Escalation
+
+- **FR14:** The system detects when a SPOC has not responded to a bot prompt within 48 hours
+- **FR15:** The system notifies the Innovation PO via Teams when a SPOC has not responded within 48 hours, including the PoC name and days since last update
+- **FR16:** The system sends a follow-up prompt to a non-responding SPOC after the 48-hour threshold
+- **FR17:** When a SPOC responds after the Innovation PO has manually overridden their ADO entry, the SPOC's response supersedes the manual override
+
+### Pipeline Visibility
+
+- **FR18:** Users with ADO access can filter PoC records by RAG status
+- **FR19:** Users with ADO access can filter PoC records by funnel stage
+- **FR20:** Users with ADO access can filter PoC records by last-updated date
+- **FR21:** Users with ADO access can filter PoC records by Technology Area
+- **FR22:** ADO PoC views are accessible from mobile devices
+- **FR23:** Blocker notes submitted via bot are visible in the ADO PoC record without PO intermediation
+- **FR24:** Innovation PO can view all PoCs with pending bot responses (prompted but not yet replied)
+
+### System Configuration & Administration
+
+- **FR25:** Innovation PO can add or remove SPOCs from the bot's active prompt roster
+- **FR26:** Innovation PO can configure the prompt cadence per SPOC or globally
+- **FR27:** The system supports configuration of funnel stage names and stage-specific criteria without code changes
+- **FR28:** The system supports onboarding of a new organizational unit through configuration only, with no new infrastructure deployment
+- **FR29:** A new org admin can configure and activate the system using a documented runbook without engineering involvement
+- **FR30:** The bot uses a single dedicated Azure service account identity for authentication to ADO and Teams
+
+### Access Control & Permissions
+
+- **FR31:** Innovation PO has full create/edit/override access to all ADO PoC records
+- **FR32:** Innovation Lead has read access to all ADO PoC records and filter views
+- **FR33:** Solution Architects have read access to ADO PoC records and can add comments
+- **FR34:** Leadership users have read access to ADO PoC records with technology-area and phase filtering
+- **FR35:** PoC Owners interact with the system exclusively through the Teams bot; the bot writes to ADO on their behalf
+- **FR36:** The vendor has maintenance access to bot configuration and SPOC roster management
+
+## Non-Functional Requirements
+
+### Reliability
+
+- Teams bot has no formal uptime SLA; downtime of hours to 1–2 days is acceptable before it becomes a business concern
+- ADO reliability relies on Microsoft's Azure DevOps SLA (existing enterprise subscription)
+- If bot fails to write a SPOC response to ADO after 3 attempts, the Innovation PO is notified via Teams — failures do not occur silently
+- ADO remains queryable and filterable independent of bot availability — pipeline visibility is not lost when the bot is down
+
+### Security
+
+- Bot service account holds minimum required permissions: write access scoped to the ADO PoC project and Teams message delivery to configured SPOCs only
+- No PoC data is stored or processed outside the organization's Microsoft tenant
+- Bot service account credentials are managed per enterprise security policy (rotation, secret storage)
+- All users authenticate via Azure AD (existing enterprise SSO) — no separate credential store
+
+### Performance
+
+- Bot prompts delivered to a SPOC's Teams inbox within 5 minutes of the scheduled trigger time
+- ADO write-back of a SPOC's response completes within 2 minutes of message receipt
+- ADO filtered views load within 5 seconds for a dataset of up to 200 PoC records
+
+### Scalability
+
+- MVP target: up to 50 active PoCs and 50 SPOCs within a single organizational unit
+- Multi-org target: up to 5 organizational units via configuration, each with up to 50 PoCs
+- Capacity bounded by Microsoft platform limits (ADO, Teams) — no custom infrastructure to scale
