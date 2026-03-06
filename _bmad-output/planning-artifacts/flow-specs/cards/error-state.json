@@ -1,0 +1,36 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.4",
+  "body": [
+    {
+      "type": "Container",
+      "style": "attention",
+      "items": [
+        {
+          "type": "TextBlock",
+          "text": "⚠️ Update not saved",
+          "weight": "Bolder",
+          "size": "Medium",
+          "color": "Attention"
+        }
+      ]
+    },
+    {
+      "type": "TextBlock",
+      "text": "Your update could not be recorded. Please try again or contact Mark directly.",
+      "wrap": true,
+      "spacing": "Medium"
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.Submit",
+      "title": "Try again",
+      "style": "positive",
+      "data": {
+        "actionType": "retryStatusUpdate"
+      }
+    }
+  ]
+}

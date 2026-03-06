@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Innovation Tracker — Adaptive Card Design Directions</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f3f2f1; color: #252424; }
+
+  header { background: #6264a7; color: white; padding: 24px 32px; }
+  header h1 { font-size: 22px; font-weight: 600; }
+  header p { font-size: 14px; opacity: 0.85; margin-top: 4px; }
+
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px; padding: 32px; max-width: 1400px; margin: 0 auto; }
+
+  .direction { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .direction-header { padding: 16px 20px; border-bottom: 1px solid #e1dfdd; }
+  .direction-header h2 { font-size: 15px; font-weight: 600; color: #252424; }
+  .direction-header p { font-size: 12px; color: #605e5c; margin-top: 4px; }
+
+  /* Teams DM shell */
+  .teams-shell { background: #f5f5f5; padding: 16px; }
+  .teams-message { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 8px; }
+  .bot-avatar { width: 32px; height: 32px; border-radius: 50%; background: #6264a7; display: flex; align-items: center; justify-content: center; color: white; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .bot-name { font-size: 11px; font-weight: 600; color: #6264a7; margin-bottom: 4px; }
+
+  /* Base card styles (Teams Adaptive Card approximation) */
+  .ac-card { background: white; border: 1px solid #e1dfdd; border-radius: 4px; padding: 12px; font-size: 13px; width: 100%; }
+  .ac-sep { border: none; border-top: 1px solid #e1dfdd; margin: 10px 0; }
+  .ac-label { font-size: 11px; color: #605e5c; margin-bottom: 3px; }
+  .ac-input { border: 1px solid #c8c6c4; border-radius: 2px; padding: 5px 8px; font-size: 13px; width: 100%; color: #252424; background: white; }
+  .ac-select { border: 1px solid #c8c6c4; border-radius: 2px; padding: 5px 8px; font-size: 13px; width: 100%; color: #605e5c; background: white; }
+  .ac-btn { background: #6264a7; color: white; border: none; border-radius: 2px; padding: 7px 16px; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 10px; width: 100%; }
+  .ac-btn:hover { background: #585a9a; }
+  .ac-blockers { display: none; }
+
+  /* Colour tokens */
+  .color-good { color: #107c10; }
+  .color-warning { color: #a46504; }
+  .color-attention { color: #c4314b; }
+  .color-accent { color: #6264a7; }
+  .color-subtle { color: #605e5c; }
+
+  /* Direction 1: Contextual First */
+  .d1 .ac-poc-name { font-size: 15px; font-weight: 700; color: #252424; margin-bottom: 2px; }
+  .d1 .ac-stage-badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; background: #ebebeb; color: #252424; margin-bottom: 8px; }
+  .d1 .ac-meta { font-size: 11px; color: #605e5c; margin-bottom: 0; }
+  .d1 .ac-criteria-heading { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #605e5c; margin-bottom: 6px; }
+  .d1 .ac-criteria { list-style: none; padding: 0; margin: 0 0 0 0; }
+  .d1 .ac-criteria li { font-size: 12px; color: #252424; padding: 2px 0; padding-left: 14px; position: relative; }
+  .d1 .ac-criteria li::before { content: '•'; position: absolute; left: 0; color: #6264a7; }
+  .d1 .ac-prompt { font-size: 13px; color: #252424; margin-bottom: 10px; }
+
+  /* Direction 2: Compact Inline */
+  .d2 .ac-inline-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+  .d2 .ac-poc-name { font-size: 14px; font-weight: 700; }
+  .d2 .ac-stage-inline { font-size: 11px; color: #605e5c; }
+  .d2 .ac-prompt { font-size: 12px; color: #605e5c; margin-bottom: 8px; line-height: 1.4; }
+  .d2 .ac-criteria-inline { font-size: 11px; color: #252424; background: #f3f2f1; padding: 6px 8px; border-radius: 2px; margin-bottom: 8px; line-height: 1.6; }
+  .d2 .ac-criteria-inline span { display: block; }
+  .d2 .ac-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  /* Direction 3: Stage-Criteria Prominent */
+  .d3 .ac-stage-banner { background: #f3f2f1; border-left: 3px solid #6264a7; padding: 8px 10px; margin-bottom: 10px; }
+  .d3 .ac-stage-label { font-size: 11px; font-weight: 700; color: #6264a7; text-transform: uppercase; letter-spacing: 0.5px; }
+  .d3 .ac-poc-name { font-size: 14px; font-weight: 700; color: #252424; }
+  .d3 .ac-criteria { list-style: none; padding: 0; margin: 0 0 10px 0; }
+  .d3 .ac-criteria li { font-size: 12px; color: #252424; padding: 4px 0 4px 22px; position: relative; border-bottom: 1px solid #f3f2f1; }
+  .d3 .ac-criteria li:last-child { border-bottom: none; }
+  .d3 .ac-criteria-num { position: absolute; left: 0; top: 4px; width: 16px; height: 16px; background: #6264a7; color: white; border-radius: 50%; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .d3 .ac-fields-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #605e5c; margin-bottom: 6px; }
+
+  /* Direction 4: Minimal / Form-First */
+  .d4 .ac-poc-name { font-size: 13px; font-weight: 600; color: #252424; margin-bottom: 2px; }
+  .d4 .ac-meta { font-size: 11px; color: #605e5c; margin-bottom: 8px; }
+  .d4 .ac-prompt { font-size: 12px; color: #252424; margin-bottom: 8px; }
+  .d4 .ac-criteria-collapsed { font-size: 11px; color: #6264a7; cursor: pointer; margin-bottom: 8px; text-decoration: underline; }
+  .d4 .ac-field-row { margin-bottom: 8px; }
+  .d4 .ac-rag-options { display: flex; gap: 6px; margin-top: 4px; }
+  .d4 .ac-rag-btn { flex: 1; padding: 6px; border: 1px solid #c8c6c4; border-radius: 2px; font-size: 12px; font-weight: 600; cursor: pointer; text-align: center; }
+  .d4 .ac-rag-btn.green { border-color: #107c10; color: #107c10; background: #f1faf1; }
+  .d4 .ac-rag-btn.amber { border-color: #a46504; color: #a46504; background: #fef9f0; }
+  .d4 .ac-rag-btn.red { border-color: #c4314b; color: #c4314b; background: #fdf3f5; }
+
+  /* Confirmed state */
+  .confirmed { display: none; }
+  .ac-confirmed { background: #f1faf1; border: 1px solid #107c10; border-radius: 4px; padding: 12px; font-size: 13px; }
+  .ac-confirmed-icon { font-size: 18px; margin-bottom: 6px; }
+  .ac-confirmed-title { font-weight: 700; color: #107c10; margin-bottom: 4px; }
+  .ac-confirmed-detail { font-size: 12px; color: #252424; }
+  .ac-confirmed-subtle { font-size: 11px; color: #605e5c; margin-top: 4px; }
+
+  /* Toggle buttons */
+  .toggle-row { display: flex; gap: 8px; padding: 10px 16px; background: #faf9f8; border-top: 1px solid #e1dfdd; }
+  .toggle-btn { font-size: 11px; padding: 4px 10px; border: 1px solid #c8c6c4; border-radius: 12px; cursor: pointer; background: white; color: #252424; }
+  .toggle-btn.active { background: #6264a7; color: white; border-color: #6264a7; }
+
+  /* Section labels */
+  .section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #a19f9d; padding: 0 20px 8px; margin-top: 4px; }
+
+  /* Escalation notification preview */
+  .escalation-section { background: #faf9f8; padding: 32px; border-top: 1px solid #e1dfdd; }
+  .escalation-section h2 { font-size: 16px; font-weight: 600; margin-bottom: 20px; }
+  .escalation-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; max-width: 1400px; margin: 0 auto; }
+
+  .ac-esc-card { background: white; border: 1px solid #e1dfdd; border-radius: 4px; padding: 12px; font-size: 13px; }
+  .ac-esc-heading { font-size: 12px; font-weight: 700; color: #a46504; margin-bottom: 6px; }
+  .ac-esc-poc { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+  .ac-esc-meta { font-size: 12px; color: #605e5c; margin-bottom: 8px; line-height: 1.5; }
+  .ac-esc-actions { display: flex; gap: 8px; margin-top: 10px; }
+  .ac-esc-btn-primary { background: #6264a7; color: white; border: none; border-radius: 2px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .ac-esc-btn-secondary { background: white; color: #252424; border: 1px solid #c8c6c4; border-radius: 2px; padding: 6px 12px; font-size: 12px; cursor: pointer; }
+
+  .direction-label { font-size: 11px; font-weight: 700; color: #6264a7; margin-bottom: 8px; }
+
+  @media (max-width: 900px) {
+    .grid, .escalation-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Innovation Tracker — Adaptive Card Design Directions</h1>
+  <p>4 layout approaches for the Teams bot prompt card · Escalation notification variations below</p>
+</header>
+
+<div class="grid">
+
+  <!-- DIRECTION 1: Contextual First -->
+  <div class="direction d1">
+    <div class="direction-header">
+      <h2>Direction 1 — Contextual First</h2>
+      <p>PoC context and stage criteria lead; form fields follow. Maximum context before ask.</p>
+    </div>
+    <div class="teams-shell">
+      <div class="teams-message">
+        <div class="bot-avatar">IT</div>
+        <div style="flex:1">
+          <div class="bot-name">Innovation Tracker Bot</div>
+          <div class="ac-card">
+            <div class="ac-poc-name">AI-Assisted Testing PoC</div>
+            <div class="ac-stage-badge">PoC Stage</div>
+            <div class="ac-meta color-subtle">Last updated: 7 days ago · SPOC: Piotr K.</div>
+            <hr class="ac-sep">
+            <div class="ac-criteria-heading">What we need at this stage:</div>
+            <ul class="ac-criteria">
+              <li>Hypothesis validated with real data or user testing</li>
+              <li>Technical feasibility confirmed</li>
+              <li>Clear recommendation: proceed, pivot, or stop</li>
+            </ul>
+            <hr class="ac-sep">
+            <div class="ac-prompt">How is the PoC progressing? Quick update below 👇</div>
+            <div class="ac-label">RAG Status</div>
+            <select class="ac-select"><option>Select status…</option><option>🟢 Green — on track</option><option>🟡 Amber — some concerns</option><option>🔴 Red — blocked</option></select>
+            <div style="height:8px"></div>
+            <div class="ac-label">One-sentence summary</div>
+            <input class="ac-input" placeholder="Where things stand right now…">
+            <div class="ac-blockers">
+              <div style="height:8px"></div>
+              <div class="ac-label">Blockers (required for Amber/Red)</div>
+              <input class="ac-input" placeholder="What's blocking progress?">
+            </div>
+            <button class="ac-btn">Submit Update</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="toggle-row">
+      <span style="font-size:11px;color:#605e5c;align-self:center">Preview:</span>
+      <button class="toggle-btn active">Prompt</button>
+      <button class="toggle-btn" onclick="toggleState(this, 'd1-confirmed')">Confirmed</button>
+    </div>
+    <div id="d1-confirmed" class="confirmed teams-shell" style="padding:16px">
+      <div class="teams-message">
+        <div class="bot-avatar">IT</div>
+        <div style="flex:1">
+          <div class="bot-name">Innovation Tracker Bot</div>
+          <div class="ac-confirmed">
+            <div class="ac-confirmed-icon">✅</div>
+            <div class="ac-confirmed-title">AI-Assisted Testing PoC — Green</div>
+            <div class="ac-confirmed-detail">"Integration with data platform is 60% complete, on track for demo in 2 weeks."</div>
+            <div class="ac-confirmed-subtle">Recorded in ADO · 09:04 · Last updated timestamp refreshed</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIRECTION 2: Compact Inline -->
+  <div class="direction d2">
+    <div class="direction-header">
+      <h2>Direction 2 — Compact Inline</h2>
+      <p>Minimal vertical space. Criteria collapsed into a tight summary block. Efficient for repeat users.</p>
+    </div>
+    <div class="teams-shell">
+      <div class="teams-message">
+        <div class="bot-avatar">IT</div>
+        <div style="flex:1">
+          <div class="bot-name">Innovation Tracker Bot</div>
+          <div class="ac-card">
+            <div class="ac-inline-header">
+              <div class="ac-poc-name">AI-Assisted Testing PoC</div>
+              <div class="ac-stage-inline">PoC Stage · 7d ago</div>
+            </div>
+            <div class="ac-prompt">Quick status update — takes under a minute. Stage criteria below:</div>
+            <div class="ac-criteria-inline">
+              <span>1. Hypothesis validated with data · 2. Technical feasibility confirmed · 3. Recommendation ready</span>
+            </div>
+            <div class="ac-row">
+              <div>
+                <div class="ac-label">RAG Status</div>
+                <select class="ac-select"><option>Select…</option><option>🟢 Green</option><option>🟡 Amber</option><option>🔴 Red</option></select>
+              </div>
+              <div>
+                <div class="ac-label">Summary</div>
+                <input class="ac-input" placeholder="One sentence…">
+              </div>
+            </div>
+            <div class="ac-blockers" style="margin-top:8px">
+              <div class="ac-label">Blockers</div>
+              <input class="ac-input" placeholder="What's blocking?">
+            </div>
+            <button class="ac-btn">Submit</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="toggle-row">
+      <span style="font-size:11px;color:#605e5c;align-self:center">Preview:</span>
+      <button class="toggle-btn active">Prompt</button>
+      <button class="toggle-btn" onclick="toggleState(this, 'd2-confirmed')">Confirmed</button>
+    </div>
+    <div id="d2-confirmed" class="confirmed teams-shell" style="padding:16px">
+      <div class="teams-message">
+        <div class="bot-avatar">IT</div>
+        <div style="flex:1">
+          <div class="bot-name">Innovation Tracker Bot</div>
+          <div class="ac-confirmed">
+            <div class="ac-confirmed-icon">✅</div>
+            <div class="ac-confirmed-title">AI-Assisted Testing PoC — Green · Recorded</div>
+            <div class="ac-confirmed-detail">"Integration with data platform is 60% complete, on track for demo in 2 weeks."</div>
+            <div class="ac-confirmed-subtle">ADO updated · 09:04</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIRECTION 3: Stage-Criteria Prominent -->
+  <div class="direction d3">
+    <div class="direction-header">
+      <h2>Direction 3 — Stage-Criteria Prominent</h2>
+      <p>Numbered criteria as the centrepiece. Best for first-time users and ambiguous stages.</p>
+    </div>
+    <div class="teams-shell">
+      <div class="teams-message">
+        <div class="bot-avatar">IT</div>
+        <div style="flex:1">
+          <div class="bot-name">Innovation Tracker Bot</div>
+          <div class="ac-card">
+            <div class="ac-stage-banner">
+              <div class="ac-stage-label">PoC Stage</div>
+              <div class="ac-poc-name">AI-Assisted Testing PoC</div>
+            </div>
+            <div class="ac-fields-label">At this stage, we need:</div>
+            <ul class="ac-criteria">
+              <li><span class="ac-criteria-num">1</span>Hypothesis validated with real data or user testing</li>
+              <li><span class="ac-criteria-num">2</span>Technical feasibility confirmed</li>
+              <li><span class="ac-criteria-num">3</span>Clear recommendation: proceed, pivot, or stop</li>
+            </ul>
+            <hr class="ac-sep">
+            <div class="ac-fields-label">Your update:</div>
+            <div class="ac-label">RAG Status</div>
+            <select class="ac-select"><option>Select status…</option><option>🟢 Green — on track</option><option>🟡 Amber — some concerns</option><option>🔴 Red — blocked</option></select>
+            <div style="height:8px"></div>
+            <div class="ac-label">One-sentence summary</div>
+            <input class="ac-input" placeholder="How is it going?">
+            <div class="ac-blockers">
+              <div style="height:8px"></div>
+              <div class="ac-label">Blockers</div>
+              <input class="ac-input" placeholder="What's in the way?">
+            </div>
+            <button class="ac-btn">Submit Update</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="toggle-row">
+      <span style="font-size:11px;color:#605e5c;align-self:center">Preview:</span>
+      <button class="toggle-btn active">Prompt</button>
+      <button class="toggle-btn" onclick="toggleState(this, 'd3-confirmed')">Confirmed</button>
+    </div>
+    <div id="d3-confirmed" class="confirmed teams-shell" style="padding:16px">
+      <div class="teams-message">
+        <div class="bot-avatar">IT</div>
+        <div style="flex:1">
+          <div class="bot-name">Innovation Tracker Bot</div>
+          <div class="ac-confirmed">
+            <div class="ac-confirmed-icon">✅</div>
+            <div class="ac-confirmed-title">Update recorded — AI-Assisted Testing PoC</div>
+            <div class="ac-confirmed-detail"><strong style="color:#107c10">Green</strong> · "Integration with data platform is 60% complete, on track for demo in 2 weeks."</div>
+            <div class="ac-confirmed-subtle">ADO Feature updated · 09:04 · Non-response timer reset</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIRECTION 4: Minimal / Action-First -->
+  <div class="direction d4">
+    <div class="direction-header">
+      <h2>Direction 4 — Minimal / Action-First</h2>
+      <p>RAG as prominent choice buttons. Criteria hidden behind a "Show criteria" link. Fastest for experienced users.</p>
+    </div>
+    <div class="teams-shell">
+      <div class="teams-message">
+        <div class="bot-avatar">IT</div>
+        <div style="flex:1">
+          <div class="bot-name">Innovation Tracker Bot</div>
+          <div class="ac-card">
+            <div class="ac-poc-name">AI-Assisted Testing PoC — PoC Stage</div>
+            <div class="ac-meta color-subtle">Weekly update · 7 days since last response</div>
+            <div style="height:8px"></div>
+            <div class="ac-prompt">How is it going?</div>
+            <div class="ac-criteria-collapsed">▸ Show PoC stage criteria</div>
+            <hr class="ac-sep">
+            <div class="ac-field-row">
+              <div class="ac-label">Status</div>
+              <div class="ac-rag-options">
+                <div class="ac-rag-btn green">🟢 Green</div>
+                <div class="ac-rag-btn amber">🟡 Amber</div>
+                <div class="ac-rag-btn red">🔴 Red</div>
+              </div>
+            </div>
+            <div style="height:8px"></div>
+            <div class="ac-label">Summary</div>
+            <input class="ac-input" placeholder="One sentence on where things stand…">
+            <div class="ac-blockers">
+              <div style="height:8px"></div>
+              <div class="ac-label">Blockers (Amber/Red)</div>
+              <input class="ac-input" placeholder="What's blocking progress?">
+            </div>
+            <button class="ac-btn">Submit</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="toggle-row">
+      <span style="font-size:11px;color:#605e5c;align-self:center">Preview:</span>
+      <button class="toggle-btn active">Prompt</button>
+      <button class="toggle-btn" onclick="toggleState(this, 'd4-confirmed')">Confirmed</button>
+    </div>
+    <div id="d4-confirmed" class="confirmed teams-shell" style="padding:16px">
+      <div class="teams-message">
+        <div class="bot-avatar">IT</div>
+        <div style="flex:1">
+          <div class="bot-name">Innovation Tracker Bot</div>
+          <div class="ac-confirmed">
+            <div class="ac-confirmed-icon">✅</div>
+            <div class="ac-confirmed-title">Got it — AI-Assisted Testing PoC: Green</div>
+            <div class="ac-confirmed-detail">"Integration with data platform is 60% complete, on track for demo in 2 weeks."</div>
+            <div class="ac-confirmed-subtle">Recorded in ADO · 09:04</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Escalation Notification Section -->
+<div class="escalation-section">
+  <div style="max-width:1400px;margin:0 auto">
+    <h2>Escalation Notification — 2 Variations (Mark's Teams DM)</h2>
+    <p style="font-size:13px;color:#605e5c;margin-bottom:20px">Both follow the PagerDuty pattern: problem + action options. Variation in verbosity and action prominence.</p>
+    <div class="escalation-grid">
+
+      <!-- Escalation A: Concise -->
+      <div class="direction">
+        <div class="direction-header">
+          <h2>Escalation A — Concise</h2>
+          <p>Short, scannable. Actions prominent. Minimal prose.</p>
+        </div>
+        <div class="teams-shell">
+          <div class="teams-message">
+            <div class="bot-avatar">IT</div>
+            <div style="flex:1">
+              <div class="bot-name">Innovation Tracker Bot</div>
+              <div class="ac-esc-card">
+                <div class="ac-esc-heading">⚠️ No Response — 48h threshold reached</div>
+                <div class="ac-esc-poc">AI-Assisted Testing PoC</div>
+                <div class="ac-esc-meta">
+                  SPOC: Piotr Kowalski · Last updated: <strong>9 days ago</strong> · Stage: PoC
+                </div>
+                <hr class="ac-sep">
+                <div class="ac-esc-actions">
+                  <button class="ac-esc-btn-primary">Open in ADO</button>
+                  <button class="ac-esc-btn-secondary">Override status</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Escalation B: Contextual -->
+      <div class="direction">
+        <div class="direction-header">
+          <h2>Escalation B — Contextual</h2>
+          <p>Includes last known status so Mark can act without opening ADO.</p>
+        </div>
+        <div class="teams-shell">
+          <div class="teams-message">
+            <div class="bot-avatar">IT</div>
+            <div style="flex:1">
+              <div class="bot-name">Innovation Tracker Bot</div>
+              <div class="ac-esc-card">
+                <div class="ac-esc-heading">⚠️ Non-Response Alert</div>
+                <div class="ac-esc-poc">AI-Assisted Testing PoC</div>
+                <div class="ac-esc-meta">
+                  SPOC: <strong>Piotr Kowalski</strong><br>
+                  Last updated: <strong>9 days ago</strong> · Stage: <strong>PoC</strong><br>
+                  Last known status: <span class="color-good">🟢 Green</span> — "Integration progressing, demo in 2 weeks"<br>
+                  A follow-up prompt has been sent to Piotr.
+                </div>
+                <hr class="ac-sep">
+                <div style="font-size:11px;color:#605e5c;margin-bottom:8px">Suggested actions:</div>
+                <div class="ac-esc-actions">
+                  <button class="ac-esc-btn-primary">Open in ADO</button>
+                  <button class="ac-esc-btn-secondary">Override manually</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Comparison Guide -->
+<div style="background:white;padding:32px;border-top:1px solid #e1dfdd">
+  <div style="max-width:1400px;margin:0 auto">
+    <h2 style="font-size:16px;font-weight:600;margin-bottom:16px">Direction Comparison Guide</h2>
+    <table style="width:100%;font-size:13px;border-collapse:collapse">
+      <thead>
+        <tr style="background:#f3f2f1;text-align:left">
+          <th style="padding:10px 12px;font-weight:600">Direction</th>
+          <th style="padding:10px 12px;font-weight:600">Card Height</th>
+          <th style="padding:10px 12px;font-weight:600">Best For</th>
+          <th style="padding:10px 12px;font-weight:600">Criteria Prominence</th>
+          <th style="padding:10px 12px;font-weight:600">Risk</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-top:1px solid #e1dfdd">
+          <td style="padding:10px 12px"><strong>1 — Contextual First</strong></td>
+          <td style="padding:10px 12px">Tallest</td>
+          <td style="padding:10px 12px">First-time users; stage clarity critical</td>
+          <td style="padding:10px 12px">High</td>
+          <td style="padding:10px 12px">Card may feel long on mobile</td>
+        </tr>
+        <tr style="border-top:1px solid #e1dfdd;background:#faf9f8">
+          <td style="padding:10px 12px"><strong>2 — Compact Inline</strong></td>
+          <td style="padding:10px 12px">Short</td>
+          <td style="padding:10px 12px">Repeat users; fast submission</td>
+          <td style="padding:10px 12px">Low</td>
+          <td style="padding:10px 12px">Criteria easy to miss or skip</td>
+        </tr>
+        <tr style="border-top:1px solid #e1dfdd">
+          <td style="padding:10px 12px"><strong>3 — Stage Prominent</strong></td>
+          <td style="padding:10px 12px">Tall</td>
+          <td style="padding:10px 12px">Habit formation; reduces ambiguity</td>
+          <td style="padding:10px 12px">Very High</td>
+          <td style="padding:10px 12px">Heavier visual weight</td>
+        </tr>
+        <tr style="border-top:1px solid #e1dfdd;background:#faf9f8">
+          <td style="padding:10px 12px"><strong>4 — Action First</strong></td>
+          <td style="padding:10px 12px">Short</td>
+          <td style="padding:10px 12px">Power users; fastest completion</td>
+          <td style="padding:10px 12px">Hidden by default</td>
+          <td style="padding:10px 12px">Criteria hidden — users may skip review</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+function toggleState(btn, confirmedId) {
+  const direction = btn.closest('.direction');
+  const allBtns = direction.querySelectorAll('.toggle-btn');
+  const promptShell = direction.querySelector('.teams-shell');
+  const confirmedEl = document.getElementById(confirmedId);
+
+  allBtns.forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  if (btn.textContent === 'Confirmed') {
+    promptShell.style.display = 'none';
+    confirmedEl.style.display = 'block';
+  } else {
+    promptShell.style.display = 'block';
+    confirmedEl.style.display = 'none';
+  }
+}
+</script>
+</body>
+</html>

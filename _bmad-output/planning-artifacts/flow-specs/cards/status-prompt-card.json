@@ -1,0 +1,139 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.4",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "{{POC_NAME}}",
+      "weight": "Bolder",
+      "size": "Medium",
+      "wrap": true
+    },
+    {
+      "type": "TextBlock",
+      "text": "Stage: {{STAGE}}",
+      "isSubtle": false,
+      "spacing": "None",
+      "wrap": true
+    },
+    {
+      "type": "TextBlock",
+      "text": "Last prompted: {{LAST_PROMPTED_DATE}}",
+      "size": "Small",
+      "isSubtle": true,
+      "spacing": "None"
+    },
+    {
+      "type": "TextBlock",
+      "text": "---",
+      "separator": true,
+      "spacing": "Medium"
+    },
+    {
+      "type": "TextBlock",
+      "text": "What we need at this stage:",
+      "weight": "Bolder",
+      "size": "Small",
+      "spacing": "Medium"
+    },
+    {
+      "type": "TextBlock",
+      "text": "{{STAGE_CRITERIA}}",
+      "wrap": true,
+      "spacing": "Small",
+      "size": "Default"
+    },
+    {
+      "type": "TextBlock",
+      "text": "---",
+      "separator": true,
+      "spacing": "Medium"
+    },
+    {
+      "type": "TextBlock",
+      "text": "Quick update — takes under 60 seconds.",
+      "wrap": true,
+      "spacing": "Medium"
+    },
+    {
+      "type": "Input.ChoiceSet",
+      "id": "ragStatus",
+      "label": "Status",
+      "style": "compact",
+      "isRequired": true,
+      "errorMessage": "Please select a status.",
+      "choices": [
+        {
+          "title": "Green – On track",
+          "value": "Green"
+        },
+        {
+          "title": "Amber – Some concerns",
+          "value": "Amber"
+        },
+        {
+          "title": "Red – Blocked / at risk",
+          "value": "Red"
+        }
+      ]
+    },
+    {
+      "type": "Input.Text",
+      "id": "summary",
+      "label": "Summary",
+      "placeholder": "Where things stand right now…",
+      "isMultiline": false,
+      "isRequired": true,
+      "errorMessage": "Please provide a brief summary.",
+      "maxLength": 500
+    },
+    {
+      "type": "Input.Text",
+      "id": "blockers",
+      "label": "Blockers",
+      "placeholder": "What's in the way?",
+      "isMultiline": true,
+      "isVisible": false,
+      "maxLength": 1000
+    },
+    {
+      "type": "Input.Text",
+      "id": "workItemId",
+      "isVisible": false,
+      "value": "{{WORK_ITEM_ID}}"
+    },
+    {
+      "type": "Input.Text",
+      "id": "stage",
+      "isVisible": false,
+      "value": "{{STAGE}}"
+    },
+    {
+      "type": "Input.Text",
+      "id": "spocUpn",
+      "isVisible": false,
+      "value": "{{SPOC_UPN}}"
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.ToggleVisibility",
+      "title": "Add blockers (Amber / Red only)",
+      "targetElements": [
+        {
+          "elementId": "blockers",
+          "isVisible": true
+        }
+      ]
+    },
+    {
+      "type": "Action.Submit",
+      "title": "Submit Update",
+      "style": "positive",
+      "data": {
+        "actionType": "statusUpdate"
+      }
+    }
+  ]
+}

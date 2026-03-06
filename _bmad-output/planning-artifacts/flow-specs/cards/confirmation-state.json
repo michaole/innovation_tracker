@@ -1,0 +1,48 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.4",
+  "body": [
+    {
+      "type": "Container",
+      "style": "good",
+      "items": [
+        {
+          "type": "TextBlock",
+          "text": "✅ Update recorded",
+          "weight": "Bolder",
+          "size": "Medium"
+        }
+      ]
+    },
+    {
+      "type": "FactSet",
+      "facts": [
+        {
+          "title": "PoC",
+          "value": "{{POC_NAME}}"
+        },
+        {
+          "title": "Status",
+          "value": "{{RAG_STATUS}}"
+        },
+        {
+          "title": "Summary",
+          "value": "{{SUMMARY}}"
+        },
+        {
+          "title": "Recorded at",
+          "value": "{{TIMESTAMP}}"
+        }
+      ],
+      "spacing": "Medium"
+    },
+    {
+      "type": "TextBlock",
+      "text": "Your update has been saved in ADO.",
+      "isSubtle": true,
+      "size": "Small",
+      "spacing": "Small"
+    }
+  ]
+}
